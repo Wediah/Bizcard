@@ -7,7 +7,7 @@
         <img src="{{ asset('assets/land.jpg') }}" class="h-full md:h-10/12 w-full object-cover" alt="landing page image"/>
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
         <div class="absolute md:top-96 top-36 left-0 text-white py-4 pl-4 md:pl-14 md:w-1/2 z-10 space-y-3" data-aos="fade-up">
-            <p class="text-4xl md:text-9xl font-bold">BIzCard+</p>
+            <p class="text-4xl md:text-9xl font-bold">BizCard+</p>
             <p class="text-xl md:text-2xl">Scale to the next level with a new way of sharing <br> your small business with your community</p>
             <flux:button
                 href="{{ route('register') }}"
