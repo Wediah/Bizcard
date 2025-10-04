@@ -27,17 +27,26 @@ class DashboardController extends Controller
         // New visitors (sessions created in current period)
         $newVisitors = VisitorSession::where('created_at', '>=', now()->subDays(7))->count();
 
-        // Average session duration
+        // Average session duration - COMPATIBLE WITH ALL DATABASES
         $driver = DB::getDriverName();
+
         if ($driver === 'sqlite') {
+            // SQLite version
             $avgSessionDuration = VisitorSession::whereNotNull('ended_at')
                 ->selectRaw("AVG(strftime('%s', ended_at) - strftime('%s', created_at)) as avg_duration")
                 ->first()->avg_duration ?? 0;
+        } elseif ($driver === 'pgsql') {
+            // PostgreSQL version
+            $avgSessionDuration = VisitorSession::whereNotNull('ended_at')
+                ->selectRaw("AVG(EXTRACT(EPOCH FROM (ended_at - created_at))) as avg_duration")
+                ->first()->avg_duration ?? 0;
         } else {
+            // MySQL version (default)
             $avgSessionDuration = VisitorSession::whereNotNull('ended_at')
                 ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, ended_at)) as avg_duration')
                 ->first()->avg_duration ?? 0;
         }
+
         $avgSessionDuration = $avgSessionDuration ? gmdate('H:i:s', $avgSessionDuration) : '00:00:00';
 
         // Bounce rate (sessions with only one page view)
