@@ -1,6 +1,6 @@
 <div class="max-w-6xl mx-auto">
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Manage Reviews</h2>
+    <div class="border  rounded-lg shadow-sm p-6">
+        <h2 class="text-2xl font-bold  mb-6">Manage Reviews</h2>
 
         @if (session('message'))
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
@@ -32,22 +32,22 @@
         <div class="overflow-x-auto">
             <table class="w-full table-auto">
                 <thead>
-                <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Customer</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Rating</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Comment</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Date</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                <tr class=" border-b ">
+                    <th class="px-4 py-3 text-left text-sm font-semibold ">Customer</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold ">Rating</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold ">Comment</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold ">Status</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold ">Date</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold ">Actions</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                 @forelse($reviews as $review)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-4 text-sm text-gray-900">
+                        <td class="px-4 py-4 text-sm ">
                             {{ $review->customer_name }}
                             @if($review->user)
-                                <span class="text-xs text-gray-500">(Registered)</span>
+                                <span class="text-xs ">(Registered)</span>
                             @endif
                         </td>
                         <td class="px-4 py-4">
@@ -55,10 +55,10 @@
                                 @for($i = 1; $i <= 5; $i++)
                                     ★
                                 @endfor
-                                <span class="ml-1 text-gray-600 text-sm">{{ $review->rating }}/5</span>
+                                <span class="ml-1  text-sm">{{ $review->rating }}/5</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-700 max-w-md">
+                        <td class="px-4 py-4 text-sm  max-w-md">
                             <p class="line-clamp-2">{{ $review->comment }}</p>
                             @if($review->business_response)
                                 <div class="mt-2 p-2 bg-blue-50 rounded text-xs">
@@ -72,7 +72,7 @@
                                     {{ $review->is_approved ? 'Approved' : 'Pending' }}
                                 </span>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-500">
+                        <td class="px-4 py-4 text-sm ">
                             {{ $review->created_at->format('M j, Y') }}
                         </td>
                         <td class="px-4 py-4 text-sm">
@@ -119,9 +119,9 @@
 
     <!-- Response Modal -->
     @if($selectedReview)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        <div class="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="border  rounded-lg shadow-xl max-w-md w-full p-6">
+                <h3 class="text-lg font-semibold  mb-4">
                     Respond to {{ $selectedReview->customer_name }}'s Review
                 </h3>
 

@@ -17,13 +17,12 @@ class BizReview extends Component
     public $selectedReview = null;
     public $businessResponse = '';
 
-    public function mount(): RedirectResponse
+    public function mount(): void
     {
         $this->profile = Profile::where('user_id', auth()->id())->first();
 
         if (!$this->profile) {
-            session()->flash('error', 'Please create a business profile first to manage reviews.');
-            return redirect()->route('profile');
+            $this->redirectRoute('profile');
         }
     }
 
