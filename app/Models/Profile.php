@@ -41,12 +41,12 @@ class Profile extends Model
 
     public function reviews()
     {
-        return $this->hasMany(reviews::class);
+        return $this->hasMany(Reviews::class);
     }
 
     public function approvedReviews()
     {
-        return $this->hasMany(reviews::class)->where('is_approved', true);
+        return $this->hasMany(Reviews::class)->where('is_approved', true);
     }
 
     public function averageRating()
