@@ -5,6 +5,7 @@ use App\Models\Profile;
 use App\Models\Reviews;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,9 +17,14 @@ class BizReview extends Component
     public $selectedReview = null;
     public $businessResponse = '';
 
-    public function mount(): void
+    public function mount(): RedirectResponse
     {
         $this->profile = Profile::where('user_id', auth()->id())->first();
+
+        if (!$this->profile) {
+            session()->flash('error', 'Please create a business profile first to manage reviews.');
+            return redirect()->route('profile');
+        }
     }
 
     public function approveReview($reviewId): void
@@ -77,6 +83,12 @@ class BizReview extends Component
 
     public function render(): Factory|View|\Illuminate\View\View
     {
+        if (!$this->profile) {
+            return view('livewire.biz-review', [
+                'reviews' => collect([]) // Return empty collection
+            ]);
+        }
+
         $reviews = Reviews::where('profile_id', $this->profile->id)
             ->with('user')
             ->latest()
