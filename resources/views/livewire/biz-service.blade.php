@@ -1,6 +1,6 @@
 <div class="max-w-4xl mx-auto">
     <div class="border rounded-lg shadow-sm p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Manage Services</h2>
+        <h2 class="text-xl font-semibold  mb-4">Manage Services</h2>
 
         @if (session('message'))
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
@@ -72,7 +72,7 @@
 
         <!-- Services List -->
         <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-gray-900">Your Services</h3>
+            <h3 class="text-lg font-semibold ">Your Services</h3>
 
             @if(count($services) > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -81,7 +81,7 @@
                             @if($service['image'])
                                 <img src="{{ $service['image'] }}" class="h-32 w-full object-cover rounded-lg mb-3">
                             @endif
-                            <h4 class="font-semibold text-gray-900">{{ $service['name'] }}</h4>
+                            <h4 class="font-semibold ">{{ $service['name'] }}</h4>
                             <p class="text-sm text-gray-600 mt-1">{{ $service['description'] }}</p>
                             <div class="flex justify-between items-center mt-3">
                                 <span class="font-semibold text-green-600">₵{{ number_format($service['price'], 2) }}</span>
