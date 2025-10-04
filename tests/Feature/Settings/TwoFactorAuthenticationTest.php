@@ -28,7 +28,10 @@ class TwoFactorAuthenticationTest extends TestCase
 
     public function test_two_factor_settings_page_can_be_rendered(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
 
         $this->actingAs($user)
             ->withSession(['auth.password_confirmed_at' => time()])
@@ -40,7 +43,10 @@ class TwoFactorAuthenticationTest extends TestCase
 
     public function test_two_factor_settings_page_requires_password_confirmation_when_enabled(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
 
         $response = $this->actingAs($user)
             ->get(route('two-factor.show'));
@@ -52,7 +58,10 @@ class TwoFactorAuthenticationTest extends TestCase
     {
         config(['fortify.features' => []]);
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
 
         $response = $this->actingAs($user)
             ->withSession(['auth.password_confirmed_at' => time()])

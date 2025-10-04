@@ -14,8 +14,11 @@ class ProfileUpdateTest extends TestCase
 
     public function test_profile_page_is_displayed(): void
     {
-        $this->actingAs($user = User::factory()->create());
-
+        $user = User::factory()->create([
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
+        $this->actingAs($user);
         $this->get('/settings/profile')->assertOk();
     }
 
