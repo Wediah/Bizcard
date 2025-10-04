@@ -37,6 +37,10 @@ class BizService extends Component
         if ($this->profile) {
             $this->services = $this->profile->services()->get()->toArray();
         }
+
+        if (!$this->profile) {
+            $this->redirectRoute('profile');
+        }
     }
 
     public function addService()
