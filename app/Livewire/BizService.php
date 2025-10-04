@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Profile;
 use App\Models\Service;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -64,7 +65,7 @@ class BizService extends Component
         // Handle image upload
         if ($this->serviceImage) {
             $imagePath = $this->serviceImage->store('business/services', 's3', ['visibility' => 'public']);
-            $serviceData['image'] = env('AWS_URL') . '/' . $imagePath;
+            $serviceData['image'] = Storage::disk('s3')->url($imagePath);
         }
 
         if ($this->editingServiceId) {

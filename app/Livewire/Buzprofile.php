@@ -104,24 +104,25 @@ class Buzprofile extends Component
         $this->business->social_links = $this->social_links;
 
         // Handle S3 image uploads
+
         if ($this->coverImage) {
             if ($this->business->cover_image) {
-                // Extract just the path from the full URL
-                $oldPath = str_replace(env('AWS_URL') . '/', '', $this->business->cover_image);
+                // Extract just the path from the full URL - FIXED
+                $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
                 Storage::disk('s3')->delete($oldPath);
             }
             $coverPath = $this->coverImage->store('business/covers', 's3', ['visibility' => 'public']);
-            $this->business->cover_image = env('AWS_URL') . '/' . $coverPath;
+            $this->business->cover_image = Storage::disk('s3')->url($coverPath); // FIXED
         }
 
         if ($this->profileImage) {
             if ($this->business->profile_image) {
-                // Extract just the path from the full URL
-                $oldPath = str_replace(env('AWS_URL') . '/', '', $this->business->profile_image);
+                // Extract just the path from the full URL - FIXED
+                $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
                 Storage::disk('s3')->delete($oldPath);
             }
             $profilePath = $this->profileImage->store('business/profiles', 's3', ['visibility' => 'public']);
-            $this->business->profile_image = env('AWS_URL') . '/' . $profilePath;
+            $this->business->profile_image = Storage::disk('s3')->url($profilePath); // FIXED
         }
 
         $this->business->save();
