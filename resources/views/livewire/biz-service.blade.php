@@ -1,5 +1,5 @@
 <div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="border rounded-lg shadow-sm p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Manage Services</h2>
 
         @if (session('message'))
