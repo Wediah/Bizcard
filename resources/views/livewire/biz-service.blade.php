@@ -9,7 +9,8 @@
         @endif
 
         <!-- Add/Edit Service Form -->
-        <form wire:submit="addService" class="mb-6 space-y-4">
+        <form wire:submit="addService" class="mb-6 space-y-4" enctype="multipart/form-data">
+            @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Service Name -->
                 <div class="md:col-span-2">

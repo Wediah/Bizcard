@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <form wire:submit="saveProfile" class="my-6 w-full space-y-6">
+        <form wire:submit="saveProfile" class="my-6 w-full space-y-6" enctype="multipart/form-data">
             @csrf
 
             <!-- Business Name -->
