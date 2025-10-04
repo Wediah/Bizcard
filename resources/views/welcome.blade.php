@@ -19,6 +19,215 @@
 
     </div>
 
+    <div class="px-4 md:px-10 py-6 bg-white text-black md:w-2/3 pt-6">
+        <h1 class="text-lg uppercase pt-3">Recent Activities</h1>
+
+        @php
+            $businesses = \App\Models\Profile::latest()->take(8)->get();
+        @endphp
+
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6">
+            @foreach($businesses as $business)
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-200" data-aos="fade-up">
+                    <a href="{{ route('business.show', ['slug' => $business->slug]) }}">
+                    <!-- Cover Image -->
+                    <div class="relative">
+                        <img
+                            src="{{ $business->cover_image }}"
+                            alt="{{ $business->business_name }}"
+                            class="w-full h-48 object-cover"
+                        />
+                    </div>
+
+                    <!-- Business Info -->
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ $business->business_name }}</h3>
+                        <div class="flex items-center text-gray-600">
+                            <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="text-sm truncate">{{ $business->location }}</span>
+                        </div>
+                    </div>
+                    </a>
+
+                    <hr class="border-gray-300">
+
+                    <div class="p-4">
+                        <button
+                            type="button"
+                            onclick="openRateModal({{ $business->id }}, '{{ addslashes($business->business_name) }}')"
+                            class="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                        >
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            Rate us
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="rateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <form id="ratingForm" method="POST" action="{{ route('ratings.store') }}">
+                @csrf
+                <input type="hidden" name="profile_id" id="formProfileId">
+                <input type="hidden" name="rating" id="formRating" value="0" required>
+
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900" id="modalBusinessName">Rate Business</h3>
+                        <button type="button" onclick="closeRateModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <p class="text-gray-600">Your reviews go a long way.</p>
+
+                        <!-- Star Rating -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Your Rating *</label>
+                            <div class="flex justify-center gap-1" id="starRating">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <button type="button"
+                                            onclick="setRating({{ $i }})"
+                                            class="text-3xl text-gray-300 hover:text-yellow-400 transition duration-200 rating-star"
+                                            data-rating="{{ $i }}">
+                                        ★
+                                    </button>
+                                @endfor
+                            </div>
+                            <div id="ratingError" class="text-red-500 text-sm mt-2 text-center hidden">Please select a rating</div>
+                        </div>
+
+                        <!-- Comment Field -->
+                        <div>
+                            <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Your Review *</label>
+                            <textarea
+                                id="comment"
+                                name="comment"
+                                rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Share your experience..."
+                                required
+                            ></textarea>
+                            @error('comment')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="button" onclick="closeRateModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200">
+                                Cancel
+                            </button>
+                            <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                                Submit Rating
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentBusinessId = null;
+        let currentRating = 0;
+
+        function openRateModal(businessId, businessName) {
+            currentBusinessId = businessId;
+            document.getElementById('modalBusinessName').textContent = `Rate ${businessName}`;
+            document.getElementById('formProfileId').value = businessId;
+            document.getElementById('rateModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            resetRatingForm();
+        }
+
+        function closeRateModal() {
+            document.getElementById('rateModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            resetRatingForm();
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            document.getElementById('formRating').value = rating;
+
+            const stars = document.querySelectorAll('.rating-star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('text-gray-300');
+                    star.classList.add('text-yellow-400');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gray-300');
+                }
+            });
+
+            document.getElementById('ratingError').classList.add('hidden');
+        }
+
+        function resetRatingForm() {
+            currentRating = 0;
+            document.getElementById('formRating').value = 0;
+            document.getElementById('comment').value = '';
+
+            const stars = document.querySelectorAll('.rating-star');
+            stars.forEach(star => {
+                star.classList.remove('text-yellow-400');
+                star.classList.add('text-gray-300');
+            });
+
+            document.getElementById('ratingError').classList.add('hidden');
+        }
+
+        // Handle form submission
+        document.getElementById('ratingForm').addEventListener('submit', function(e) {
+            if (currentRating === 0) {
+                e.preventDefault();
+                document.getElementById('ratingError').classList.remove('hidden');
+
+                // Scroll to error
+                document.getElementById('ratingError').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                return;
+            }
+
+            // Basic comment validation
+            const comment = document.getElementById('comment').value;
+            if (!comment.trim()) {
+                e.preventDefault();
+                alert('Please enter your review comment.');
+                return;
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('rateModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRateModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRateModal();
+            }
+        });
+    </script>
+
+    <hr class="bg-black">
     <div class="px-4 md:px-10 py-6 bg-white text-black md:w-2/3">
         <h1 class="text-lg uppercase">Who we are</h1>
         <h2 class="items-center md:text-5xl text-3xl text-[#F3763C] font-bold py-4">
@@ -227,5 +436,29 @@
                 <div class="text-sm text-gray-600 mt-2">Average Setup Time</div>
             </div>
         </div>
+
+        @if (session('success'))
+            <div class="fixed top-5 right-5 z-50 bg-green-500 text-white p-4 rounded-lg shadow-lg" id="alert-success">
+                {{ session('success') }}
+            </div>
+            <script>
+                // Auto-hide the success message after 5 seconds
+                setTimeout(() => {
+                    document.getElementById('alert-success').remove();
+                }, 5000);
+            </script>
+        @endif
+
+        @if (session('error'))
+            <div class="fixed top-5 right-5 z-50 bg-red-500 text-white p-4 rounded-lg shadow-lg" id="alert-error">
+                {{ session('error') }}
+            </div>
+            <script>
+                // Auto-hide the error message after 5 seconds
+                setTimeout(() => {
+                    document.getElementById('alert-error').remove();
+                }, 5000);
+            </script>
+        @endif
     </div>
 @endsection

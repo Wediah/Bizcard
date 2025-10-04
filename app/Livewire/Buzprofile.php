@@ -136,10 +136,14 @@ class Buzprofile extends Component
 
     public function selectTheme($themeName): void
     {
-        if ($this->business) {
+        if ($this->business && array_key_exists($themeName, $this->themes)) {
             $this->business->theme_colors = $this->themes[$themeName];
             $this->business->save();
-            session()->flash('message', 'Theme updated successfully!');
+
+            // Refresh the business data to show the updated theme
+            $this->business->refresh();
+
+            session()->flash('message', ucfirst($themeName) . ' theme applied successfully!');
         }
     }
 

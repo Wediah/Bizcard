@@ -84,11 +84,6 @@
                                     </button>
                                 @endif
 
-                                <button wire:click="setResponse({{ $review->id }})"
-                                        class="text-blue-600 hover:text-blue-800 text-xs">
-                                    {{ $review->business_response ? 'Edit Response' : 'Respond' }}
-                                </button>
-
                                 @if(!$review->is_approved)
                                     <button wire:click="rejectReview({{ $review->id }})"
                                             class="text-red-600 hover:text-red-800 text-xs"

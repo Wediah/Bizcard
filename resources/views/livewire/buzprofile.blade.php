@@ -202,6 +202,76 @@
                 </div>
             </div>
 
+            <!-- Theme Selection -->
+            @if($business)
+                <div class="space-y-4">
+                    <flux:label>Theme Selection</flux:label>
+                    <p class="text-sm text-gray-600">Choose a color theme for your business profile</p>
+
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        @foreach($themes as $name => $colors)
+                            <button
+                                type="button"
+                                wire:click="selectTheme('{{ $name }}')"
+                                class="relative p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md {{ $business->theme_colors && $business->theme_colors['primary'] === $colors['primary'] ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200' }}"
+                                title="{{ ucfirst($name) }} Theme"
+                            >
+                                <div class="flex flex-col gap-2">
+                                    <!-- Primary Color -->
+                                    <div
+                                        class="h-6 rounded-md w-full"
+                                        style="background-color: {{ $colors['primary'] }}"
+                                    ></div>
+                                    <!-- Secondary Color -->
+                                    <div
+                                        class="h-4 rounded-md w-full"
+                                        style="background-color: {{ $colors['secondary'] }}"
+                                    ></div>
+                                    <!-- Accent Color -->
+                                    <div
+                                        class="h-3 rounded-md w-full"
+                                        style="background-color: {{ $colors['accent'] }}"
+                                    ></div>
+                                </div>
+                                <span class="block text-xs font-medium mt-2 text-gray-700 text-center">
+                                {{ ucfirst($name) }}
+                            </span>
+
+                                <!-- Selected indicator -->
+                                @if($business->theme_colors && $business->theme_colors['primary'] === $colors['primary'])
+                                    <div class="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <!-- Current Theme Display -->
+                    @if($business->theme_colors)
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-medium text-gray-700 mb-2">Current Theme Colors:</p>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded border" style="background-color: {{ $business->theme_colors['primary'] }}"></div>
+                                    <span class="text-xs text-gray-600">Primary</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded border" style="background-color: {{ $business->theme_colors['secondary'] }}"></div>
+                                    <span class="text-xs text-gray-600">Secondary</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded border" style="background-color: {{ $business->theme_colors['accent'] }}"></div>
+                                    <span class="text-xs text-gray-600">Accent</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <!-- Publish Toggle -->
             <flux:field variant="inline">
                 <flux:checkbox wire:model="is_published" value="1" />
@@ -211,12 +281,6 @@
 
             <!-- Submit Button -->
             <div class="flex items-center justify-end gap-4">
-{{--                @if($business)--}}
-{{--                    <flux:button variant="secondary" type="button" wire:click="togglePublish" class="w-full md:w-auto">--}}
-{{--                        {{ $is_published ? 'Unpublish' : 'Publish Now' }}--}}
-{{--                    </flux:button>--}}
-{{--                @endif--}}
-
                 <flux:button variant="primary" type="submit" class="w-full md:w-auto">
                     {{ $business ? 'Update Profile' : 'Create Profile' }}
                 </flux:button>

@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\BusinessProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RatingController;
 use App\Livewire\BizReview;
 use App\Livewire\BizService;
 use App\Livewire\Buzprofile;
+use App\Livewire\MyBiz;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -16,10 +20,11 @@ Route::get('/', function () {
 
 
 
+
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::view('dashboard', 'dashboard')
-        ->middleware(['auth', 'verified'])
+    Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+
 
     Route::redirect('settings', 'settings/profile');
 
@@ -42,5 +47,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
         )
         ->name('two-factor.show');
 });
+
+Route::post('/ratings', [RatingController::class, 'store'])->middleware('auth')->name('ratings.store');
+
+
+Route::get('/business/{slug}', [BusinessProfileController::class, 'show'])->middleware('track')->name('business.show');
+
+Route::get('/my-business', \App\Livewire\MyBiz::class)->name('my-business');;
 
 require __DIR__.'/auth.php';

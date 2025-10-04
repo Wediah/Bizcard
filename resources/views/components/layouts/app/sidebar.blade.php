@@ -14,9 +14,17 @@
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Platform')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('profile')" :current="request()->routeIs('profile')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('services')" :current="request()->routeIs('services')" wire:navigate>{{ __('Services') }}</flux:navlist.item>
-                    <flux:navlist.item icon="home" :href="route('reviews')" :current="request()->routeIs('reviews')" wire:navigate>{{ __('Reviews') }}</flux:navlist.item>
+                    <flux:navlist.item icon="user" :href="route('profile')" :current="request()->routeIs('profile')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
+                    <flux:navlist.item icon="wrench-screwdriver" :href="route('services')" :current="request()->routeIs('services')" wire:navigate>{{ __('Services') }}</flux:navlist.item>
+                    <flux:navlist.item icon="star" :href="route('reviews')" :current="request()->routeIs('reviews')" wire:navigate>{{ __('Reviews') }}</flux:navlist.item>
+                        <flux:navlist.item
+                            icon="globe-alt"
+                            :href="route('my-business')"
+                            :current="request()->routeIs('my-business')"
+                            wire:navigate
+                        >
+                            {{ __('View Public Profile') }}
+                        </flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 

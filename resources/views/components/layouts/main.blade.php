@@ -73,6 +73,22 @@
             background-color: white !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
+        /* Dropdown styles */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            min-width: 200px;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 50;
+        }
+        .dropdown-menu.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -87,15 +103,51 @@
         <!-- Desktop Menu -->
         <div class="" id="desktop-menu">
             <ul class="flex flex-col md:flex-row md:space-x-4 rtl:space-x-reverse md:mt-0 md:border-0 font-semibold font-sans items-center">
-                <li>
-                    <a href="{{ route('login') }}" class="block py-2 px-3 md:hover:bg-transparent md:border-0 hover:text-yellow-400 md:p-0 text-lg text-white">Login</a>
-                </li>
-                <li>
-                    <a href="{{ route('register') }}" class="bg-[#F3763C] text-white px-6 py-3 rounded-lg hover:bg-[#e5692b] transition duration-200 flex items-center gap-2">
-                        Get Started
-                        <i class='bx bx-arrow-right'></i>
-                    </a>
-                </li>
+                @auth
+                    <!-- Authenticated User Dropdown -->
+                    <li class="relative">
+                        <button id="user-dropdown-btn" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-white/10 transition duration-200 text-white">
+                            <div class="w-8 h-8 rounded-full bg-[#F3763C] flex items-center justify-center text-white font-bold">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                            <span>{{ auth()->user()->name }}</span>
+                            <i class='bx bx-chevron-down'></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="dropdown-menu">
+                            <div class="py-2">
+{{--                                <a href="{{ route('dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200">--}}
+{{--                                    <i class='bx bx-home'></i>--}}
+{{--                                    <span>Dashboard</span>--}}
+{{--                                </a>--}}
+{{--                                <a href="{{ route('settings.profile') }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200">--}}
+{{--                                    <i class='bx bx-cog'></i>--}}
+{{--                                    <span>Settings</span>--}}
+{{--                                </a>--}}
+{{--                                <hr class="my-2">--}}
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 transition duration-200 w-full text-left">
+                                        <i class='bx bx-log-out'></i>
+                                        <span>Logout</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                @else
+                    <!-- Guest Links -->
+                    <li>
+                        <a href="{{ route('login') }}" class="block py-2 px-3 md:hover:bg-transparent md:border-0 hover:text-yellow-400 md:p-0 text-lg text-white">Login</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('register') }}" class="bg-[#F3763C] text-white px-6 py-3 rounded-lg hover:bg-[#e5692b] transition duration-200 flex items-center gap-2">
+                            Get Started
+                            <i class='bx bx-arrow-right'></i>
+                        </a>
+                    </li>
+                @endauth
             </ul>
         </div>
     </div>
@@ -107,8 +159,19 @@
         <i class='bx bx-x'></i>
     </button>
     <ul class="flex flex-col items-center justify-center h-full">
-        <li><a href="{{ route('login') }}">Login</a></li>
-        <li><a href="{{ route('register') }}">Get Started</a></li>
+        @auth
+{{--            <li><a href="{{ route('dashboard') }}">Dashboard</a></li>--}}
+{{--            <li><a href="{{ route('settings.profile') }}">Settings</a></li>--}}
+            <li>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="text-red-600">Logout</button>
+                </form>
+            </li>
+        @else
+            <li><a href="{{ route('login') }}">Login</a></li>
+            <li><a href="{{ route('register') }}">Get Started</a></li>
+        @endauth
         <li><a href="/">How it works</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/contact">Contact</a></li>
@@ -218,11 +281,30 @@
         });
     });
 
+    // User dropdown functionality
+    const dropdownBtn = document.getElementById('user-dropdown-btn');
+    const dropdownMenu = document.getElementById('user-dropdown-menu');
+
+    if (dropdownBtn && dropdownMenu) {
+        dropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('active');
+            }
+        });
+    }
+
     // Scroll functionality
     window.addEventListener('scroll', function() {
         const navbar = document.getElementById('navbar');
         const navLogo = document.getElementById('big1');
-        const navLinks = document.querySelectorAll('#desktop-menu a');
+        const navLinks = document.querySelectorAll('#desktop-menu a:not(button)');
+        const userDropdownBtn = document.getElementById('user-dropdown-btn');
 
         if (window.scrollY > 50) {
             navbar.classList.add('scrolled');
@@ -234,6 +316,12 @@
                 link.classList.remove('text-white');
                 link.classList.add('text-gray-900');
             });
+
+            // Update dropdown button color
+            if (userDropdownBtn) {
+                userDropdownBtn.classList.remove('text-white');
+                userDropdownBtn.classList.add('text-gray-900');
+            }
         } else {
             navbar.classList.remove('scrolled');
             navLogo.classList.remove('text-black');
@@ -244,6 +332,12 @@
                 link.classList.remove('text-gray-900');
                 link.classList.add('text-white');
             });
+
+            // Revert dropdown button color
+            if (userDropdownBtn) {
+                userDropdownBtn.classList.remove('text-gray-900');
+                userDropdownBtn.classList.add('text-white');
+            }
         }
     });
 </script>
