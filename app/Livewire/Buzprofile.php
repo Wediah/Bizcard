@@ -4,14 +4,13 @@ namespace App\Livewire;
 use App\Models\Profile;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 
 class Buzprofile extends Component
 {
-    use WithFileUploads;
-
     // Individual properties for form binding
     public $business_name;
     public $slogan;
@@ -23,8 +22,6 @@ class Buzprofile extends Component
     public $is_published = false;
     public $social_links = [];
 
-    public $coverImage;
-    public $profileImage;
     public $business; // Keep this for image operations
 
     // Theme options
@@ -45,8 +42,7 @@ class Buzprofile extends Component
         'website' => 'nullable|url',
         'location' => 'nullable',
         'is_published' => 'boolean',
-        'coverImage' => 'nullable|image|max:5120',
-        'profileImage' => 'nullable|image|max:5120',
+        // File rules applied manually in saveProfile()
     ];
 
     public function mount(): void
@@ -70,7 +66,7 @@ class Buzprofile extends Component
                 'linkedin' => ''
             ];
         } else {
-            // Initialize empty social links for the new profile
+            // Initialize empty social links for new profile
             $this->social_links = [
                 'facebook' => '',
                 'instagram' => '',
@@ -80,9 +76,16 @@ class Buzprofile extends Component
         }
     }
 
-    public function saveProfile(): void
+    public function saveProfile(Request $request): void
     {
+        // Validate text fields first
         $this->validate();
+
+        // Manual file validation (like your ProjectForms example)
+        $request->validate([
+            'coverImage' => 'nullable|image|max:5120', // 5MB
+            'profileImage' => 'nullable|image|max:5120',
+        ]);
 
         // Check if we're updating existing profile or creating new one
         if (!$this->business) {
@@ -102,17 +105,10 @@ class Buzprofile extends Component
         $this->business->is_published = $this->is_published;
         $this->business->social_links = $this->social_links;
 
-        // Handle S3 image uploads with error handling
+        // Handle S3 image uploads (direct from request, like your example's Cloudinary)
         try {
-            // Validate temp files exist before S3 move
-            if ($this->coverImage && !$this->coverImage->isValid()) {
-                throw new \Exception('Cover image temp file invalid: ' . $this->coverImage->getErrorMessage());
-            }
-            if ($this->profileImage && !$this->profileImage->isValid()) {
-                throw new \Exception('Profile image temp file invalid: ' . $this->profileImage->getErrorMessage());
-            }
-
-            if ($this->coverImage) {
+            $coverFile = $request->file('coverImage');
+            if ($coverFile) {
                 if ($this->business->cover_image) {
                     // Extract just the path from the full URL
                     $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
@@ -120,12 +116,13 @@ class Buzprofile extends Component
                         \Log::warning('Failed to delete old cover image: ' . $oldPath);
                     }
                 }
-                $coverPath = $this->coverImage->store('business/covers', 's3', ['visibility' => 'public']);
+                $coverPath = $coverFile->store('business/covers', 's3', ['visibility' => 'public']);
                 $this->business->cover_image = Storage::disk('s3')->url($coverPath);
-                \Log::info('Cover image uploaded successfully to: ' . $coverPath); // Debug log
+                \Log::info('Cover image uploaded successfully to: ' . $coverPath);
             }
 
-            if ($this->profileImage) {
+            $profileFile = $request->file('profileImage');
+            if ($profileFile) {
                 if ($this->business->profile_image) {
                     // Extract just the path from the full URL
                     $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
@@ -133,9 +130,9 @@ class Buzprofile extends Component
                         \Log::warning('Failed to delete old profile image: ' . $oldPath);
                     }
                 }
-                $profilePath = $this->profileImage->store('business/profiles', 's3', ['visibility' => 'public']);
+                $profilePath = $profileFile->store('business/profiles', 's3', ['visibility' => 'public']);
                 $this->business->profile_image = Storage::disk('s3')->url($profilePath);
-                \Log::info('Profile image uploaded successfully to: ' . $profilePath); // Debug log
+                \Log::info('Profile image uploaded successfully to: ' . $profilePath);
             }
 
             $this->business->save();
@@ -143,21 +140,13 @@ class Buzprofile extends Component
         } catch (\Exception $e) {
             \Log::error('Profile save failed: ' . $e->getMessage(), [
                 'user_id' => auth()->id(),
-                'cover_valid' => $this->coverImage ? $this->coverImage->isValid() : null,
-                'profile_valid' => $this->profileImage ? $this->profileImage->isValid() : null,
-                'cover_name' => $this->coverImage ? $this->coverImage->getClientOriginalName() : null,
-                'profile_name' => $this->profileImage ? $this->profileImage->getClientOriginalName() : null,
+                'cover_name' => $coverFile?->getClientOriginalName() ?? null,
+                'profile_name' => $profileFile?->getClientOriginalName() ?? null,
             ]);
 
-            // Flash a user-friendly error tied to the image fields
-            $this->addError('coverImage', 'Image upload failed: ' . $e->getMessage());
-            $this->addError('profileImage', 'Image upload failed: ' . $e->getMessage());
+            session()->flash('error', 'Image upload failed: ' . $e->getMessage());
             return; // Bail out on failure
         }
-
-        // Clear the temporary uploaded files
-        $this->coverImage = null;
-        $this->profileImage = null;
 
         $action = $this->business->wasRecentlyCreated ? 'created' : 'updated';
         session()->flash('message', "Profile {$action} successfully!");
@@ -186,13 +175,6 @@ class Buzprofile extends Component
             $status = $this->business->is_published ? 'published' : 'unpublished';
             session()->flash('message', "Profile {$status} successfully!");
         }
-    }
-
-    // Get S3 image URL
-    public function getImageUrl($path): ?string
-    {
-        if (!$path) return null;
-        return Storage::disk('s3')->url($path);
     }
 
     // Remove cover image

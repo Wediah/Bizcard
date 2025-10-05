@@ -1,4 +1,5 @@
 <div>
+    <!-- Back Navigation -->
     <div class="mb-6">
         <flux:button
             onclick="history.back()"
@@ -11,7 +12,7 @@
         </flux:button>
     </div>
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-2xl mx-auto">
         <div class="flex flex-col gap-2">
             <h2 class="font-semibold text-2xl leading-tight">
                 Business Profile
@@ -24,6 +25,12 @@
         @if (session('message'))
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg my-4">
                 {{ session('message') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg my-4">
+                {{ session('error') }}
             </div>
         @endif
 
@@ -107,45 +114,27 @@
                 </div>
             </div>
 
-            <!-- Image Uploads -->
+            <!-- Image Uploads (Regular Form Inputs, No wire:model) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Cover Image -->
                 <div class="flex flex-col items-start">
                     <flux:label>Cover Image</flux:label>
                     <input
                         type="file"
-                        wire:model="coverImage"
+                        name="coverImage"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg"
                         accept="image/*"
                     />
 
-                    <!-- Preview for newly selected cover image -->
-                    @if ($coverImage)
-                        <div class="mt-2 relative">
-                            <img
-                                src="{{ $coverImage->temporaryUrl() }}"
-                                alt="New Cover Image"
-                                class="h-20 w-full object-cover rounded-lg"
-                                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5Y2EiIGlkPSJub3Rmb3VuZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5ldyBJbWFnZSBBZGRlZCAoQ2hlY2sgQ29uc29sZSk8L3RleHQ+PC9zdmc+'"
-                            >
-                            <button type="button" wire:click="$set('coverImage', null)" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full text-xs">
-                                ×
-                            </button>
-                            <p class="text-xs text-gray-500 mt-1">New cover image preview</p>
-                        </div>
-                    @endif
-
                     <!-- Existing cover image -->
-                    @if ($business && $business->cover_image && !$coverImage)
+                    @if ($business && $business->cover_image)
                         <div class="mt-2 relative">
-                            <img src="{{ $business->cover_image }}" alt="cover image" class="h-20 w-full object-cover rounded-lg">
+                            <img src="{{ $business->cover_image }}" class="h-20 w-full object-cover rounded-lg">
                             <button type="button" wire:click="removeCoverImage" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full text-xs">
                                 ×
                             </button>
                         </div>
                     @endif
-
-                    @error('coverImage') <div class="text-sm text-red-500">{{ $message }}</div> @enderror
                 </div>
 
                 <!-- Profile Image -->
@@ -153,29 +142,13 @@
                     <flux:label>Profile Image</flux:label>
                     <input
                         type="file"
-                        wire:model="profileImage"
+                        name="profileImage"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg"
                         accept="image/*"
                     />
 
-                    <!-- Preview for newly selected profile image -->
-                    @if ($profileImage)
-                        <div class="mt-2 relative inline-block">
-                            <img
-                                src="{{ $profileImage->temporaryUrl() }}"
-                                alt="New Profile Image"
-                                class="h-20 w-20 rounded-full object-cover"
-                                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRleHQgeD0iNTAiIHk9IjUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5Y2EiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5OZXcgUHJvZmlsZSBJbWFnZTwvdGV4dD48L3N2Zz4='"
-                            >
-                            <button type="button" wire:click="$set('profileImage', null)" class="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full text-xs">
-                                ×
-                            </button>
-                            <p class="text-xs text-gray-500 mt-1">New profile image preview</p>
-                        </div>
-                    @endif
-
                     <!-- Existing profile image -->
-                    @if ($business && $business->profile_image && !$profileImage)
+                    @if ($business && $business->profile_image)
                         <div class="mt-2 relative inline-block">
                             <img src="{{ $business->profile_image }}" class="h-20 w-20 rounded-full object-cover">
                             <button type="button" wire:click="removeProfileImage" class="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full text-xs">
@@ -183,8 +156,6 @@
                             </button>
                         </div>
                     @endif
-
-                    @error('profileImage') <div class="text-sm text-red-500">{{ $message }}</div> @enderror
                 </div>
             </div>
 
@@ -296,4 +267,36 @@
             </div>
         </form>
     </div>
+
+    <!-- Simple JS for File Previews (Optional, Client-Side Only) -->
+    <script>
+        document.querySelector('input[name="coverImage"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = e.target.parentNode.querySelector('.cover-preview') || document.createElement('div');
+                    preview.innerHTML = `<img src="${e.target.result}" class="h-20 w-full object-cover rounded-lg mt-2"> <p class="text-xs text-gray-500 mt-1">Preview</p>`;
+                    preview.className = 'relative mt-2';
+                    e.target.parentNode.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Similar for profileImage...
+        document.querySelector('input[name="profileImage"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = e.target.parentNode.querySelector('.profile-preview') || document.createElement('div');
+                    preview.innerHTML = `<img src="${e.target.result}" class="h-20 w-20 rounded-full object-cover mt-2"> <p class="text-xs text-gray-500 mt-1">Preview</p>`;
+                    preview.className = 'relative inline-block mt-2';
+                    e.target.parentNode.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 </div>
