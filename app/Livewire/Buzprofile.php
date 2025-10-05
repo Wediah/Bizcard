@@ -1,5 +1,4 @@
 <?php
-// app/Livewire/Buzprofile.php
 namespace App\Livewire;
 
 use App\Models\Profile;
@@ -71,7 +70,7 @@ class Buzprofile extends Component
                 'linkedin' => ''
             ];
         } else {
-            // Initialize empty social links for new profile
+            // Initialize empty social links for the new profile
             $this->social_links = [
                 'facebook' => '',
                 'instagram' => '',
@@ -103,29 +102,58 @@ class Buzprofile extends Component
         $this->business->is_published = $this->is_published;
         $this->business->social_links = $this->social_links;
 
-        // Handle S3 image uploads
-
-        if ($this->coverImage) {
-            if ($this->business->cover_image) {
-                // Extract just the path from the full URL - FIXED
-                $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
-                Storage::disk('s3')->delete($oldPath);
+        // Handle S3 image uploads with error handling
+        try {
+            // Validate temp files exist before S3 move
+            if ($this->coverImage && !$this->coverImage->isValid()) {
+                throw new \Exception('Cover image temp file invalid: ' . $this->coverImage->getErrorMessage());
             }
-            $coverPath = $this->coverImage->store('business/covers', 's3', ['visibility' => 'public']);
-            $this->business->cover_image = Storage::disk('s3')->url($coverPath); // FIXED
-        }
-
-        if ($this->profileImage) {
-            if ($this->business->profile_image) {
-                // Extract just the path from the full URL - FIXED
-                $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
-                Storage::disk('s3')->delete($oldPath);
+            if ($this->profileImage && !$this->profileImage->isValid()) {
+                throw new \Exception('Profile image temp file invalid: ' . $this->profileImage->getErrorMessage());
             }
-            $profilePath = $this->profileImage->store('business/profiles', 's3', ['visibility' => 'public']);
-            $this->business->profile_image = Storage::disk('s3')->url($profilePath); // FIXED
-        }
 
-        $this->business->save();
+            if ($this->coverImage) {
+                if ($this->business->cover_image) {
+                    // Extract just the path from the full URL
+                    $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
+                    if (!Storage::disk('s3')->delete($oldPath)) {
+                        \Log::warning('Failed to delete old cover image: ' . $oldPath);
+                    }
+                }
+                $coverPath = $this->coverImage->store('business/covers', 's3', ['visibility' => 'public']);
+                $this->business->cover_image = Storage::disk('s3')->url($coverPath);
+                \Log::info('Cover image uploaded successfully to: ' . $coverPath); // Debug log
+            }
+
+            if ($this->profileImage) {
+                if ($this->business->profile_image) {
+                    // Extract just the path from the full URL
+                    $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
+                    if (!Storage::disk('s3')->delete($oldPath)) {
+                        \Log::warning('Failed to delete old profile image: ' . $oldPath);
+                    }
+                }
+                $profilePath = $this->profileImage->store('business/profiles', 's3', ['visibility' => 'public']);
+                $this->business->profile_image = Storage::disk('s3')->url($profilePath);
+                \Log::info('Profile image uploaded successfully to: ' . $profilePath); // Debug log
+            }
+
+            $this->business->save();
+
+        } catch (\Exception $e) {
+            \Log::error('Profile save failed: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'cover_valid' => $this->coverImage ? $this->coverImage->isValid() : null,
+                'profile_valid' => $this->profileImage ? $this->profileImage->isValid() : null,
+                'cover_name' => $this->coverImage ? $this->coverImage->getClientOriginalName() : null,
+                'profile_name' => $this->profileImage ? $this->profileImage->getClientOriginalName() : null,
+            ]);
+
+            // Flash a user-friendly error tied to the image fields
+            $this->addError('coverImage', 'Image upload failed: ' . $e->getMessage());
+            $this->addError('profileImage', 'Image upload failed: ' . $e->getMessage());
+            return; // Bail out on failure
+        }
 
         // Clear the temporary uploaded files
         $this->coverImage = null;
@@ -171,10 +199,16 @@ class Buzprofile extends Component
     public function removeCoverImage(): void
     {
         if ($this->business && $this->business->cover_image) {
-            Storage::disk('s3')->delete($this->business->cover_image);
-            $this->business->cover_image = null;
-            $this->business->save();
-            session()->flash('message', 'Cover image removed successfully!');
+            // Extract just the path from the full URL
+            $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
+            if (Storage::disk('s3')->delete($oldPath)) {
+                $this->business->cover_image = null;
+                $this->business->save();
+                session()->flash('message', 'Cover image removed successfully!');
+            } else {
+                \Log::warning('Failed to delete cover image from S3: ' . $oldPath);
+                session()->flash('message', 'Failed to remove cover image. Please try again.');
+            }
         }
     }
 
@@ -182,10 +216,16 @@ class Buzprofile extends Component
     public function removeProfileImage(): void
     {
         if ($this->business && $this->business->profile_image) {
-            Storage::disk('s3')->delete($this->business->profile_image);
-            $this->business->profile_image = null;
-            $this->business->save();
-            session()->flash('message', 'Profile image removed successfully!');
+            // Extract just the path from the full URL
+            $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
+            if (Storage::disk('s3')->delete($oldPath)) {
+                $this->business->profile_image = null;
+                $this->business->save();
+                session()->flash('message', 'Profile image removed successfully!');
+            } else {
+                \Log::warning('Failed to delete profile image from S3: ' . $oldPath);
+                session()->flash('message', 'Failed to remove profile image. Please try again.');
+            }
         }
     }
 
