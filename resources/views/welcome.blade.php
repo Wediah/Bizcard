@@ -19,8 +19,9 @@
 
     </div>
 
-    <div class="px-4 md:px-10 py-6 bg-white text-black md:w-2/3 pt-6">
-        <h1 class="text-lg uppercase pt-3">Recent Activities</h1>
+    <h1 class="text-lg uppercase px-4 md:px-10 py-6">Explore Businesses</h1>
+    <div class="px-4 md:px-10 py-6 bg-white text-black md:w-2/3 pt-6 mx-auto">
+
 
         @php
             $businesses = \App\Models\Profile::latest()->take(8)->get();
