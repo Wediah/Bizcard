@@ -43,7 +43,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                 @forelse($reviews as $review)
-                    <tr class="hover:bg-gray-50">
+                    <tr>
                         <td class="px-4 py-4 text-sm ">
                             {{ $review->customer_name }}
                             @if($review->user)
