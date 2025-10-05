@@ -129,5 +129,22 @@
         {{ $slot }}
 
         @fluxScripts
+
+        <script>
+            function handleImageUpload(event, targetInputId) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const el = document.getElementById(targetInputId);
+                    if (el) {
+                        el.value = e.target.result;
+                        el.dispatchEvent(new Event('input'));
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        </script>
     </body>
 </html>

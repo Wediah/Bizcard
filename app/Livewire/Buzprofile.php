@@ -1,17 +1,23 @@
 <?php
+
 namespace App\Livewire;
 
 use App\Models\Profile;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Buzprofile extends Component
 {
-    // Individual properties for form binding
+    // Remove: use WithFileUploads;
+
+    // Base64 strings instead of file uploads
+    public $coverImageBase64 = '';
+    public $profileImageBase64 = '';
+
+    // Form fields
     public $business_name;
     public $slogan;
     public $description;
@@ -22,7 +28,7 @@ class Buzprofile extends Component
     public $is_published = false;
     public $social_links = [];
 
-    public $business; // Keep this for image operations
+    public $business; // Keep for image operations
 
     // Theme options
     public $themes = [
@@ -42,7 +48,7 @@ class Buzprofile extends Component
         'website' => 'nullable|url',
         'location' => 'nullable',
         'is_published' => 'boolean',
-        // File rules applied manually in saveProfile()
+        // Note: image validation done manually in saveProfile()
     ];
 
     public function mount(): void
@@ -50,7 +56,6 @@ class Buzprofile extends Component
         $this->business = Profile::where('user_id', auth()->id())->first();
 
         if ($this->business) {
-            // Populate form fields with existing data
             $this->business_name = $this->business->business_name;
             $this->slogan = $this->business->slogan;
             $this->description = $this->business->description;
@@ -66,7 +71,6 @@ class Buzprofile extends Component
                 'linkedin' => ''
             ];
         } else {
-            // Initialize empty social links for new profile
             $this->social_links = [
                 'facebook' => '',
                 'instagram' => '',
@@ -76,18 +80,10 @@ class Buzprofile extends Component
         }
     }
 
-    public function saveProfile(Request $request): void
+    public function saveProfile(): void
     {
-        // Validate text fields first
         $this->validate();
 
-        // Manual file validation (like your ProjectForms example)
-        $request->validate([
-            'coverImage' => 'nullable|image|max:5120', // 5MB
-            'profileImage' => 'nullable|image|max:5120',
-        ]);
-
-        // Check if we're updating existing profile or creating new one
         if (!$this->business) {
             $this->business = new Profile();
             $this->business->user_id = auth()->id();
@@ -105,51 +101,51 @@ class Buzprofile extends Component
         $this->business->is_published = $this->is_published;
         $this->business->social_links = $this->social_links;
 
-        // Handle S3 image uploads (direct from request, like your example's Cloudinary)
         try {
-            $coverFile = $request->file('coverImage');
-            if ($coverFile) {
+            // Handle Cover Image
+            if ($this->coverImageBase64) {
                 if ($this->business->cover_image) {
-                    // Extract just the path from the full URL
-                    $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
-                    if (!Storage::disk('s3')->delete($oldPath)) {
-                        \Log::warning('Failed to delete old cover image: ' . $oldPath);
+                    $oldPath = $this->extractS3PathFromUrl($this->business->cover_image);
+                    if ($oldPath && Storage::disk('s3')->exists($oldPath)) {
+                        Storage::disk('s3')->delete($oldPath);
                     }
                 }
-                $coverPath = $coverFile->store('business/covers', 's3', ['visibility' => 'public']);
-                $this->business->cover_image = Storage::disk('s3')->url($coverPath);
-                \Log::info('Cover image uploaded successfully to: ' . $coverPath);
+                $path = $this->uploadBase64ToS3($this->coverImageBase64, 'business/covers');
+                $this->business->cover_image = Storage::disk('s3')->url($path);
             }
 
-            $profileFile = $request->file('profileImage');
-            if ($profileFile) {
+            // Handle Profile Image
+            if ($this->profileImageBase64) {
                 if ($this->business->profile_image) {
-                    // Extract just the path from the full URL
-                    $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
-                    if (!Storage::disk('s3')->delete($oldPath)) {
-                        \Log::warning('Failed to delete old profile image: ' . $oldPath);
+                    $oldPath = $this->extractS3PathFromUrl($this->business->profile_image);
+                    if ($oldPath && Storage::disk('s3')->exists($oldPath)) {
+                        Storage::disk('s3')->delete($oldPath);
                     }
                 }
-                $profilePath = $profileFile->store('business/profiles', 's3', ['visibility' => 'public']);
-                $this->business->profile_image = Storage::disk('s3')->url($profilePath);
-                \Log::info('Profile image uploaded successfully to: ' . $profilePath);
+                $path = $this->uploadBase64ToS3($this->profileImageBase64, 'business/profiles');
+                $this->business->profile_image = Storage::disk('s3')->url($path);
             }
 
             $this->business->save();
 
+            // Clear base64 after successful upload
+            $this->coverImageBase64 = '';
+            $this->profileImageBase64 = '';
+
+            $action = $this->business->wasRecentlyCreated ? 'created' : 'updated';
+            session()->flash('message', "Profile {$action} successfully!");
+
         } catch (\Exception $e) {
-            \Log::error('Profile save failed: ' . $e->getMessage(), [
+            \Log::error('Buzprofile save failed', [
+                'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
-                'cover_name' => $coverFile?->getClientOriginalName() ?? null,
-                'profile_name' => $profileFile?->getClientOriginalName() ?? null,
+                'cover_provided' => !empty($this->coverImageBase64),
+                'profile_provided' => !empty($this->profileImageBase64),
             ]);
 
-            session()->flash('error', 'Image upload failed: ' . $e->getMessage());
-            return; // Bail out on failure
+            $this->addError('coverImageBase64', 'Image upload failed: ' . $e->getMessage());
+            return;
         }
-
-        $action = $this->business->wasRecentlyCreated ? 'created' : 'updated';
-        session()->flash('message', "Profile {$action} successfully!");
     }
 
     public function selectTheme($themeName): void
@@ -157,10 +153,7 @@ class Buzprofile extends Component
         if ($this->business && array_key_exists($themeName, $this->themes)) {
             $this->business->theme_colors = $this->themes[$themeName];
             $this->business->save();
-
-            // Refresh the business data to show the updated theme
             $this->business->refresh();
-
             session()->flash('message', ucfirst($themeName) . ' theme applied successfully!');
         }
     }
@@ -171,47 +164,98 @@ class Buzprofile extends Component
             $this->business->is_published = !$this->business->is_published;
             $this->business->save();
             $this->is_published = $this->business->is_published;
-
             $status = $this->business->is_published ? 'published' : 'unpublished';
             session()->flash('message', "Profile {$status} successfully!");
         }
     }
 
-    // Remove cover image
     public function removeCoverImage(): void
     {
         if ($this->business && $this->business->cover_image) {
-            // Extract just the path from the full URL
-            $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->cover_image);
-            if (Storage::disk('s3')->delete($oldPath)) {
+            $oldPath = $this->extractS3PathFromUrl($this->business->cover_image);
+            if ($oldPath && Storage::disk('s3')->delete($oldPath)) {
                 $this->business->cover_image = null;
                 $this->business->save();
                 session()->flash('message', 'Cover image removed successfully!');
             } else {
-                \Log::warning('Failed to delete cover image from S3: ' . $oldPath);
+                \Log::warning('Failed to delete cover image from S3', ['path' => $oldPath]);
                 session()->flash('message', 'Failed to remove cover image. Please try again.');
             }
         }
     }
 
-    // Remove profile image
     public function removeProfileImage(): void
     {
         if ($this->business && $this->business->profile_image) {
-            // Extract just the path from the full URL
-            $oldPath = str_replace(Storage::disk('s3')->url(''), '', $this->business->profile_image);
-            if (Storage::disk('s3')->delete($oldPath)) {
+            $oldPath = $this->extractS3PathFromUrl($this->business->profile_image);
+            if ($oldPath && Storage::disk('s3')->delete($oldPath)) {
                 $this->business->profile_image = null;
                 $this->business->save();
                 session()->flash('message', 'Profile image removed successfully!');
             } else {
-                \Log::warning('Failed to delete profile image from S3: ' . $oldPath);
+                \Log::warning('Failed to delete profile image from S3', ['path' => $oldPath]);
                 session()->flash('message', 'Failed to remove profile image. Please try again.');
             }
         }
     }
 
-    public function render(): Factory|View|\Illuminate\View\View
+    // ===== HELPER METHODS =====
+
+    protected function uploadBase64ToS3(string $dataUrl, string $folder): string
+    {
+        // Validate base64 format
+        if (!preg_match('/^data:image\/(\w+);base64,(.*)$/', $dataUrl, $matches)) {
+            throw new \InvalidArgumentException('Invalid base64 image format');
+        }
+
+        $mimeType = $matches[1];
+        $base64 = $matches[2];
+
+        // Map mime types to extensions
+        $extensionMap = [
+            'jpeg' => 'jpg',
+            'jpg' => 'jpg',
+            'png' => 'png',
+            'gif' => 'gif',
+            'svg+xml' => 'svg',
+            'webp' => 'webp',
+        ];
+
+        $extension = $extensionMap[$mimeType] ?? 'jpg';
+        $binary = base64_decode($base64);
+
+        if ($binary === false) {
+            throw new \InvalidArgumentException('Failed to decode base64 string');
+        }
+
+        $filename = Str::random(40) . '.' . $extension;
+        $path = "{$folder}/{$filename}";
+
+        Storage::disk('s3')->put($path, $binary, 'public');
+
+        return $path;
+    }
+
+    protected function extractS3PathFromUrl(string $fullUrl): ?string
+    {
+        // Get base URL of S3 disk (e.g., https://bucket.s3.region.amazonaws.com)
+        $baseUrl = rtrim(Storage::disk('s3')->url(''), '/');
+
+        // If URL starts with base URL, extract path
+        if (str_starts_with($fullUrl, $baseUrl)) {
+            $path = substr($fullUrl, strlen($baseUrl));
+            return ltrim($path, '/');
+        }
+
+        // Fallback: if it looks like a path (no http), return as-is
+        if (!str_starts_with($fullUrl, 'http')) {
+            return ltrim($fullUrl, '/');
+        }
+
+        return null;
+    }
+
+    public function render(): Factory|View
     {
         return view('livewire.buzprofile');
     }

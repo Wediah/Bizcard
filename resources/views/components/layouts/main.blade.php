@@ -257,6 +257,23 @@
 </footer>
 
 <script>
+    function handleImageUpload(event, targetInputId) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const el = document.getElementById(targetInputId);
+            if (el) {
+                el.value = e.target.result;
+                el.dispatchEvent(new Event('input'));
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+</script>
+
+<script>
     // Mobile menu functionality
     const menuToggle = document.getElementById('menu-toggle');
     const closeMenu = document.getElementById('close-menu');
