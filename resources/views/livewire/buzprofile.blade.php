@@ -124,7 +124,6 @@
 
                     <!-- File picker -->
                     <label for="coverImageInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg cursor-pointer  text-left">
-                        <span wire:loading.remove wire:target="coverImageBase64">Choose cover image</span>
                         <span wire:loading wire:target="coverImageBase64" class="flex items-center">
                             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -135,7 +134,7 @@
                         <input
                             id="coverImageInput"
                             type="file"
-                            class="sr-only"
+
                             accept="image/*"
                             onchange="handleImageUpload(event, 'coverImageText')"
                         />
@@ -184,7 +183,6 @@
                     <input id="profileImageText" class="sr-only" wire:model="profileImageBase64" />
 
                     <label for="profileImageInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg cursor-pointer  text-left">
-                        <span wire:loading.remove wire:target="profileImageBase64">Choose profile image</span>
                         <span wire:loading wire:target="profileImageBase64" class="flex items-center">
                             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -195,7 +193,6 @@
                         <input
                             id="profileImageInput"
                             type="file"
-                            class="sr-only"
                             accept="image/*"
                             onchange="handleImageUpload(event, 'profileImageText')"
                         />
