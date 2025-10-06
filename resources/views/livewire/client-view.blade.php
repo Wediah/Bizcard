@@ -1,7 +1,8 @@
 @extends('components.layouts.main')
 <div>
-    <div class="relative">
+    <div class="relative inlines-block">
         <img src="{{ $profile->cover_image }}" class="h-full md:h-10/12 w-full object-cover" alt="landing page image"/>
+        <div class="absolute inset-0 bg-black opacity-50"></div>
         <div class="absolute top-36 left-0 text-white py-4 pl-4 md:pl-14 md:w-1/2 z-10 space-y-3" data-aos="fade-up">
             <p class="text-4xl md:text-7xl font-bold">{{ $profile->business_name }}</p>
             <p class="text-xl md:text-2xl">{{ $profile->description }}</p>
